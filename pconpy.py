@@ -740,6 +740,44 @@ class ContactMatrix(Matrix):
                 if self.get(i,j) > 0:
                     fh.write(str(i) + '\t' + str(j) + '\n')
 
+    def print_contact_json(self, fh, sse=None, hbonds=False):
+        """ Print the contact list
+
+        Write the contact list to fh as json:
+
+        Arguments:
+            fh - open for write filehandle to write to
+        """
+        links = []
+        nodes = []
+
+        sse_labels = {"H": "A-helix", "B": "Isolated B-bridge",
+                      "E": "B-strand", "G": "3/10-helix",
+                      "I": "Pi-helix", "T": "Turn",
+                      "S": "Bend", "C": "Coil"}
+
+        for i, res_one in enumerate(self.pp):
+            nodes.append({"name": res_one.name})
+            for j, res_two in enumerate(self.pp):
+                # Obtain the sse annotations.
+                if sse == "DSSP":
+                    sse_i = self.pp[i].dssp_sse
+                    sse_j = self.pp[j].dssp_sse
+                else:
+                    sse_i = self.pp[i].stride_sse
+                    sse_j = self.pp[j].stride_sse
+
+                if self.get(i, j) > 0:
+                    data = {"source": i, "target": j, "value": self.get(i, j)}
+                    if sse and sse_i and sse_i == sse_j:
+                        data["sse"] = sse_i
+                    if hbonds and self.pp[j].dssp_id in self.pp[i].hbonds:
+                        data["hbond"] = True
+                    links.append(data)
+        import json
+        data = {"links": links, "nodes": nodes}
+        json.dump(data, fh)
+
     def plot(self, sse=None, hbonds=False, regions=None, chain_boundaries=None,
              plot_title=None, noticks=False, nolegend=False, output=None):
         """Plot the contact matrix.
@@ -1362,16 +1400,20 @@ def make_plot():
 
     parser.add_option("--cmaplist", dest="cmaplist", default=False,
                       action="store_true",
-                      help=" save the contact map as an ASCII list of" 
+                      help=" save the contact map as an ASCII list of"
                            " contact residue pairs.")
-                     
+
+    parser.add_option("--cmapjson", dest="cmapjson", default=False,
+                      action="store_true",
+                      help=" save the contact map as an JSON list of "
+                      "contact residue pairs and annotations.")
 
     parser.add_option("--nolegend", dest="nolegend", default=False,
                       action="store_true",
                       help="turn off the sse colour code legend " +
                       "(legend is displayed by default if --sse option is" +
                       "specified")
-    
+
     # Parse the options.
     (options, _) = parser.parse_args()
 
@@ -1425,6 +1467,15 @@ def make_plot():
 
         if options.ascii:
             cmatrix.save_matrix(options.output)
+        elif options.cmapjson:
+            if options.output:
+                fh = open(options.output + ".json", 'w')
+            else:
+                fh = sys.stdout
+            cmatrix.print_contact_json(fh,
+                                       sse=options.sse,
+                                       hbonds=options.hbonds)
+            fh.close()
         elif options.cmaplist:
             if options.output:
                 fh = open(options.output, 'w')
