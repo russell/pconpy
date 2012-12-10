@@ -212,7 +212,7 @@ class Protein(object):
 
         # Put contents of dssp output into a temp file.
         (_, tmp_fn) = tempfile.mkstemp(".stridedssp")
-        os.system("dsspcmbi -w " + pdb_file + " " + tmp_fn) 
+        os.system("mkdssp -i " + pdb_file + " -o " + tmp_fn)
         output = open(tmp_fn, "r")
         self.__dssp_lookup = {}
 
@@ -272,14 +272,14 @@ class Protein(object):
 
         for line in output:
             rec_type = line[:3]
-            
+
             if rec_type == "ACC" or rec_type == "DNR":
                 hbp1 = line[11:15].strip()
                 hbp2 = line[31:35].strip()
 
                 hbp1_chain_id = line[9]
                 hbp2_chain_id = line[29]
-                 
+
                 # Check if the current residue has been parsed.
                 try:
                     curr_res = self.get_pdb_residue(hbp1_chain_id, hbp1)
@@ -309,7 +309,7 @@ class Protein(object):
 
                 # Check if the current residue was parsed by dssp.
                 try:
-                    curr_res = self.get_pdb_residue(chain_id, pdb_res_id) 
+                    curr_res = self.get_pdb_residue(chain_id, pdb_res_id)
                     curr_res.stride_sse = stride_sse
                 except (AttributeError, KeyError):
                     # Residue not parsed, move on.
@@ -349,7 +349,7 @@ class Protein(object):
 
         """
 
-        return self.__dssp_lookup[dssp_id] 
+        return self.__dssp_lookup[dssp_id]
 
     def get_pdb_residue(self, chain_id, pdb_res_id):
         """Get a Residue object by its pdb residue id, because pdb residue
@@ -372,7 +372,7 @@ class Protein(object):
             polypeptide.
 
         """
-    
+
         # If no chain was specified, return all the residues from all chains.
         if chains == []:
             return [residue for chain in self.chains for residue in \
@@ -431,7 +431,7 @@ class Chain(object):
 
         Arguments:
             pdb_res_id -- the residue ID of the residue in the PDB file.
-        
+
         """
         return self.__pdb_lookup[str(pdb_res_id)]
 
@@ -478,7 +478,7 @@ class Residue(object):
 
         Arguments:
             atom_name -- the name of the atom in the residue.
-        
+
         """
 
         try:
@@ -512,7 +512,7 @@ class Matrix(object):
 
     def __len__(self):
         return len(self.__matrix)
-    
+
     def get(self, x, y):
         """Get a matrix value using a cartesian-coordinate system.
 
@@ -529,7 +529,7 @@ class Matrix(object):
 	        raise IndexError
 
         return self.__matrix[len(self.__matrix) - y - 1, x]
-    
+
     def set(self, x, y, val):
         """Set a matrix value at a particular coordinate.
 
@@ -683,7 +683,7 @@ class ContactMatrix(Matrix):
         """
 
         # Call superclass constructor with a blank matrix of ints.
-        Matrix.__init__(self, zeros((len(pp), len(pp)), int)) 
+        Matrix.__init__(self, zeros((len(pp), len(pp)), int))
 
         # Attributes.
         self.pp = pp
@@ -719,7 +719,7 @@ class ContactMatrix(Matrix):
 
     def print_contact_list(self, fh):
         """ Print the contact list
-        
+
         Write the contact list to fh in the following format:
 
         n
@@ -803,7 +803,7 @@ class ContactMatrix(Matrix):
             output -- the file for the plot to be saved to.
 
         """
-        
+
         # Regular contact coordinates.
         xs = []
         ys = []
@@ -819,17 +819,17 @@ class ContactMatrix(Matrix):
         # Try to scale the markersize according to the length of the protein.
         ms = 700.0 / len(self.pp)
 
-        sse_locs = {"H" : [], "B" : [], "E" : [], "G" : [], "I" : [],
-                    "T" : [], "S" : [], "C" : []}
+        sse_locs = {"H": [], "B": [], "E": [], "G": [], "I": [],
+                    "T": [], "S": [], "C": []}
 
-        sse_labels = {"H" : "A-helix", "B" : "Isolated B-bridge", \
-                      "E" : "B-strand", "G" : "3/10-helix", \
-                      "I" : "Pi-helix", "T" : "Turn", \
-                      "S" : "Bend", "C" : "Coil"}
+        sse_labels = {"H": "A-helix", "B": "Isolated B-bridge",
+                      "E": "B-strand", "G": "3/10-helix",
+                      "I": "Pi-helix", "T": "Turn",
+                      "S": "Bend", "C": "Coil"}
 
         for i, res_one in enumerate(self.pp):
             for j, res_two in enumerate(self.pp):
-                if (i == j and not sse) or abs(i-j) < self.seq_separation:
+                if (i == j and not sse) or abs(i - j) < self.seq_separation:
                     continue
 
                 # Obtain the sse annotations.
@@ -841,19 +841,19 @@ class ContactMatrix(Matrix):
                     sse_j = self.pp[j].stride_sse
 
                 if self.get(i, j) > 0:
-                    xs += [i+1]
-                    ys += [j+1]
+                    xs += [i + 1]
+                    ys += [j + 1]
 
                     if sse and sse_i and sse_i == sse_j:
-                        sse_locs[sse_i] += [(i+1, j+1)]
+                        sse_locs[sse_i] += [(i + 1, j + 1)]
 
                     if hbonds and self.pp[j].dssp_id in self.pp[i].hbonds:
-                        hbonds_xs += [i+1]
-                        hbonds_ys += [j+1]
+                        hbonds_xs += [i + 1]
+                        hbonds_ys += [j + 1]
 
                 elif i == j and sse:
                     if sse_i and sse_i == sse_j:
-                        sse_locs[sse_i] += [(i+1, j+1)]
+                        sse_locs[sse_i] += [(i + 1, j + 1)]
 
         pylab.plot(xs, ys, "ks", ms=ms,  mew=0, mfc="black", zorder=1, aa=False)
 
@@ -1014,8 +1014,8 @@ def calc_eucl_distance(v1, v2):
         the Euclidean distance between v1 and v2.
 
     """
-    
-    return sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2 + 
+
+    return sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2 +
                       (v1[2] - v2[2]) ** 2)
 
 
@@ -1231,7 +1231,7 @@ def draw_highlights(regions):
 
         start = int(start)
         end = int(end)
-        
+
         if start < xlim[0]:
             start = xlim[0]
         elif start > xlim[1]:
@@ -1334,7 +1334,7 @@ def make_plot():
     parser.add_option("--output", dest="output", default=None,
                       help="file to save the plot to (e.g. *.eps, " +
                       "*.pdb, *.png, *.ps, or *.svg), if not specified, " +
-                      "the plot will be displayed on the screen in " + 
+                      "the plot will be displayed on the screen in " +
                       "interactive mode.")
 
     parser.add_option("--chains", dest="chains", default="all",
@@ -1364,7 +1364,7 @@ def make_plot():
                       "(default=0).")
 
     parser.add_option("--highlight", dest="regions", default=None,
-                      help="highlight specific residues " + 
+                      help="highlight specific residues " +
                       "(disabled by default)")
 
     parser.add_option("--sse", dest="sse", default=None,
@@ -1374,7 +1374,7 @@ def make_plot():
 
     parser.add_option("--hbonds", dest="hbonds", action="store_true",
                       default=False,
-                      help="plots hydrogen bonds if enabled " + 
+                      help="plots hydrogen bonds if enabled " +
                       "(disabled by default).")
 
     parser.add_option("--title", dest="plot_title", default=None,
