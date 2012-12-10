@@ -1,126 +1,158 @@
 contactMap = function (){
-var margin = {top: 80, right: 0, bottom: 10, left: 80},
-    width = 720,
-    height = 720;
+    var margin = {top: 80, right: 0, bottom: 10, left: 80},
+        width = 720,
+        height = 720;
 
-var x = d3.scale.ordinal().rangeBands([0, width]),
-    z = d3.scale.linear().domain([0, 4]).clamp(true),
-    c = d3.scale.category10().domain(d3.range(10));
+    var legend = {"H": "A-helix", "B": "Isolated B-bridge",
+                  "E": "B-strand", "G": "3/10-helix",
+                  "I": "Pi-helix", "T": "Turn",
+                  "S": "Bend", "C": "Coil"};
 
-var svg = d3.select("body").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .style("margin-left", -margin.left + "px")
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var x = d3.scale.ordinal().rangeBands([0, width]),
+        z = d3.scale.linear().domain([0, 4]).clamp(true),
+        c = d3.scale.category10().domain(Object.keys(legend));
 
-d3.json("cmap.json", function(miserables) {
-  var matrix = [],
-      nodes = miserables.nodes,
-      n = nodes.length;
+    var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .style("margin-left", -margin.left + "px")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  // Compute index per node.
-  nodes.forEach(function(node, i) {
-    node.index = i;
-    node.count = 0;
-    matrix[i] = d3.range(n).map(function(j) { return {x: j, y: i, z: 0}; });
-  });
+    var legendSvg = d3.select("body").append("svg")
+            .attr("width", 200)
+            .attr("height", 500);
 
-  // Convert links to matrix; count character occurrences.
-  miserables.links.forEach(function(link) {
-    matrix[link.source][link.target].z += link.value;
-    matrix[link.target][link.source].z += link.value;
-    matrix[link.source][link.source].z += link.value;
-    matrix[link.target][link.target].z += link.value;
-    nodes[link.source].count += link.value;
-    nodes[link.target].count += link.value;
-  });
+    var y = 0;
+    for (var key in legend) {
+        if (legend.hasOwnProperty(key)) {
+            legendSvg.append("svg:rect")
+                .attr("fill", c(key) )
+                .attr("x", 0)
+                .attr("y", y + 0)
+                .attr("width", 20)
+                .attr("height", 20);
 
-  x.domain(d3.range(n));
+            legendSvg.append("svg:text")
+                .attr("x", 30)
+                .attr("y", y + 15)
+                .text(legend[key]);
+            y += 21;
+        }
+    }
 
-  svg.append("rect")
-      .attr("class", "background")
-      .attr("width", width)
-      .attr("height", height);
+    d3.json("cmap.json", function(miserables) {
+        var matrix = [],
+            nodes = miserables.nodes,
+            n = nodes.length;
 
-  var row = svg.selectAll(".row")
-      .data(matrix)
-    .enter().append("g")
-      .attr("class", "row")
-      .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
-      .each(row);
+        // Compute index per node.
+        nodes.forEach(function(node, i) {
+            node.index = i;
+            node.count = 0;
+            matrix[i] = d3.range(n).map(function(j) { return {x: j, y: i, z: 0}; });
+        });
 
-  row.append("line")
-      .attr("x2", width);
+        miserables.links.forEach(function(link) {
+            matrix[link.source][link.target].z += link.value;
+            matrix[link.target][link.source].z += link.value;
+            matrix[link.source][link.source].z += link.value;
+            matrix[link.target][link.target].z += link.value;
+            matrix[link.target][link.source].t = link.sse;
+            matrix[link.source][link.target].t = link.sse;
+            matrix[link.target][link.source].h = link.hbond;
+            matrix[link.source][link.target].h = link.hbond;
+            nodes[link.source].count += link.value;
+            nodes[link.target].count += link.value;
+        });
 
-  row.append("text")
-      .attr("x", -6)
-      .attr("y", x.rangeBand() / 2)
-      .attr("dy", ".32em")
-      .attr("text-anchor", "end")
-      .text(function(d, i) { return nodes[i].name; });
+        x.domain(d3.range(n));
 
-  var column = svg.selectAll(".column")
-      .data(matrix)
-    .enter().append("g")
-      .attr("class", "column")
-      .attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+        svg.append("rect")
+            .attr("class", "background")
+            .attr("width", width)
+            .attr("height", height);
 
-  column.append("line")
-      .attr("x1", -width);
+        var row = svg.selectAll(".row")
+                .data(matrix)
+                .enter().append("g")
+                .attr("class", "row")
+                .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
+                .each(row);
 
-  column.append("text")
-      .attr("x", 6)
-      .attr("y", x.rangeBand() / 2)
-      .attr("dy", ".32em")
-      .attr("text-anchor", "start")
-      .text(function(d, i) { return nodes[i].name; });
+        row.append("line")
+            .attr("x2", width);
 
-  function row(row) {
-    var cell = d3.select(this).selectAll(".cell")
-        .data(row.filter(function(d) { return d.z; }))
-      .enter().append("rect")
-        .attr("class", "cell")
-        .attr("x", function(d) { return x(d.x); })
-        .attr("width", x.rangeBand())
-        .attr("height", x.rangeBand())
-        .style("fill-opacity", function(d) { return z(d.z); })
-        .style("fill", function(d) { return nodes[d.x].group == nodes[d.y].group ? c(nodes[d.x].group) : null; })
-        .on("mouseover", mouseover)
-        .on("mouseout", mouseout);
-  }
+        row.append("text")
+            .attr("x", -6)
+            .attr("y", x.rangeBand() / 2)
+            .attr("dy", ".32em")
+            .attr("text-anchor", "end")
+            .text(function(d, i) { return nodes[i].name; });
 
-  function mouseover(p) {
-    d3.selectAll(".row text").classed("active", function(d, i) { return i == p.y; });
-    d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; });
-  }
+        var column = svg.selectAll(".column")
+                .data(matrix)
+                .enter().append("g")
+                .attr("class", "column")
+                .attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
 
-  function mouseout() {
-    d3.selectAll("text").classed("active", false);
-  }
+        column.append("line")
+            .attr("x1", -width);
 
-  d3.select("#order").on("change", function() {
-    clearTimeout(timeout);
-    order(this.value);
-  });
+        column.append("text")
+            .attr("x", 6)
+            .attr("y", x.rangeBand() / 2)
+            .attr("dy", ".32em")
+            .attr("text-anchor", "start")
+            .text(function(d, i) { return nodes[i].name; });
 
-  function order(value) {
-    x.domain(orders[value]);
+        function row(row) {
+            var cell = d3.select(this).selectAll(".cell")
+                    .data(row.filter(function(d) { return d.z; }))
+                    .enter().append("rect")
+                    .attr("class", "cell")
+                    .attr("x", function(d) { return x(d.x); })
+                    .attr("width", x.rangeBand())
+                    .attr("height", x.rangeBand())
+                    .style("fill-opacity", function(d) { return z(d.z); })
+                    .style("fill", function(d) { return d.t ? c(d.t) : null; })
+                    .on("mouseover", mouseover)
+                    .on("mouseout", mouseout);
+        }
 
-    var t = svg.transition().duration(2500);
+        function mouseover(p) {
+            d3.selectAll(".row text").classed("active", function(d, i) { return i == p.y; });
+            d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; });
+            d3.selectAll(".row").classed("active", function(d, i) { return i == p.y; });
+            d3.selectAll(".column").classed("active", function(d, i) { return i == p.x; });
+        }
 
-    t.selectAll(".row")
-        .delay(function(d, i) { return x(i) * 4; })
-        .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
-      .selectAll(".cell")
-        .delay(function(d) { return x(d.x) * 4; })
-        .attr("x", function(d) { return x(d.x); });
+        function mouseout() {
+            d3.selectAll("text").classed("active", false);
+        }
 
-    t.selectAll(".column")
-        .delay(function(d, i) { return x(i) * 4; })
-        .attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
-  }
+        d3.select("#order").on("change", function() {
+            clearTimeout(timeout);
+            order(this.value);
+        });
 
-});
+        function order(value) {
+            x.domain(orders[value]);
+
+            var t = svg.transition().duration(2500);
+
+            t.selectAll(".row")
+                .delay(function(d, i) { return x(i) * 4; })
+                .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
+                .selectAll(".cell")
+                .delay(function(d) { return x(d.x) * 4; })
+                .attr("x", function(d) { return x(d.x); });
+
+            t.selectAll(".column")
+                .delay(function(d, i) { return x(i) * 4; })
+                .attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+        }
+
+    });
 
 };
