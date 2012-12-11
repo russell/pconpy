@@ -23,12 +23,41 @@ contactMap = function (){
             .attr("width", 200)
             .attr("height", 500);
 
-    var y = 0;
+    var y = 2;
+    legendSvg.append("svg:rect")
+        .attr("fill", "none" )
+        .attr("stroke", "black" )
+        .attr("stroke-width", "1" )
+        .attr("x", 2)
+        .attr("y", y + 0)
+        .attr("width", 20)
+        .attr("height", 20);
+
+    legendSvg.append("svg:text")
+        .attr("x", 30)
+        .attr("y", y + 15)
+        .text("No Bond");
+    y += 22;
+
+    legendSvg.append("svg:circle")
+        .attr("fill", "none" )
+        .attr("stroke", "black" )
+        .attr("stroke-width", "1" )
+        .attr("cx", 12)
+        .attr("cy", y + 10)
+        .attr("r", 10);
+
+    legendSvg.append("svg:text")
+        .attr("x", 30)
+        .attr("y", y + 15)
+        .text("Hydrogen Bond");
+    y += 25;
+
     for (var key in legend) {
         if (legend.hasOwnProperty(key)) {
             legendSvg.append("svg:rect")
                 .attr("fill", c(key) )
-                .attr("x", 0)
+                .attr("x", 2)
                 .attr("y", y + 0)
                 .attr("width", 20)
                 .attr("height", 20);
@@ -37,7 +66,7 @@ contactMap = function (){
                 .attr("x", 30)
                 .attr("y", y + 15)
                 .text(legend[key]);
-            y += 21;
+            y += 22;
         }
     }
 
@@ -77,11 +106,14 @@ contactMap = function (){
                 .data(matrix)
                 .enter().append("g")
                 .attr("class", "row")
-                .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
-                .each(row);
+                .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; });
 
-        row.append("line")
-            .attr("x2", width);
+        row.each(row_bondless);
+
+        row.each(row_bond);
+
+        // row.append("line")
+        //     .attr("x2", width);
 
         row.append("text")
             .attr("x", -6)
@@ -96,8 +128,8 @@ contactMap = function (){
                 .attr("class", "column")
                 .attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
 
-        column.append("line")
-            .attr("x1", -width);
+        // column.append("line")
+        //     .attr("x1", -width);
 
         column.append("text")
             .attr("x", 6)
@@ -106,25 +138,34 @@ contactMap = function (){
             .attr("text-anchor", "start")
             .text(function(d, i) { return nodes[i].name; });
 
-        function row(row) {
-            var cell = d3.select(this).selectAll(".cell")
-                    .data(row.filter(function(d) { return d.z; }))
-                    .enter().append("rect")
-                    .attr("class", "cell")
-                    .attr("x", function(d) { return x(d.x); })
-                    .attr("width", x.rangeBand())
-                    .attr("height", x.rangeBand())
+        function format_cell(cell) {
+            cell.attr("class", "cell")
                     .style("fill-opacity", function(d) { return z(d.z); })
                     .style("fill", function(d) { return d.t ? c(d.t) : null; })
                     .on("mouseover", mouseover)
                     .on("mouseout", mouseout);
         }
+        function row_bondless(row) {
+            var cell = d3.select(this).selectAll()
+                    .data(row.filter(function(d) { return ! d.h && d.z; }));
+            format_cell(cell.enter().append("rect")
+                        .attr("x", function(d) { return x(d.x); })
+                        .attr("width", x.rangeBand())
+                        .attr("height", x.rangeBand()));
+        }
+
+        function row_bond(row) {
+            var cell = d3.select(this).selectAll()
+                    .data(row.filter(function(d) { return d.h && d.z; }));
+            format_cell(cell.enter().append("circle")
+                        .attr("cx", function(d) { return x(d.x) + x.rangeBand()/2; })
+                        .attr("cy", function(d) { return x.rangeBand()/2; })
+                        .attr("r", x.rangeBand()/2));
+        }
 
         function mouseover(p) {
             d3.selectAll(".row text").classed("active", function(d, i) { return i == p.y; });
             d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; });
-            // d3.selectAll(".row").classed("active", function(d, i) { return i == p.y; });
-            // d3.selectAll(".column").classed("active", function(d, i) { return i == p.x; });
         }
 
         function mouseout() {
