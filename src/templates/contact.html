@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html><head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/><meta charset="utf-8"/>
+    <title>Contact Map</title>
+    <style>
+
+      .background {
+      fill: #eee;
+      }
+
+      line {
+      stroke: #fff;
+      }
+
+      text.active {
+      fill: red;
+      }
+
+      svg {
+      font: 10px sans-serif;
+      }
+
+      body {
+      font-family: "Helvetica Neue",Helvetica,sans-serif;
+      margin: 1em auto;
+      position: relative;
+      width: 960px;
+      }
+
+      .row.active, .column.active {
+      fill: red;
+      }
+
+    </style>
+  </head>
+  <body>
+    <form id="structure">
+      <fieldset>
+        <legend>Find Structure</legend>
+        <label>Structure ID</label>
+        <input id="structureid" type="text" value="1UBQ"/>
+        <button type="submit" class="btn">Submit</button>
+      </fieldset>
+    </form>
+
+    <script src="/static/js/d3.js"></script>
+    <script src="/static/js/contact.js"></script>
+    <script src="/static/js/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+         contactMap($("#structureid").attr("value"));
+         $("#structure").submit(function(event) {
+             event.preventDefault();
+             contactMap($("#structureid").attr("value"));
+             });
+      });
+    </script>
+  </body>
+</html>
