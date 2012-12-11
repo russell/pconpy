@@ -1,5 +1,5 @@
 contactMap = function (){
-    var margin = {top: 80, right: 0, bottom: 10, left: 80},
+    var margin = {top: 10, right: 0, bottom: 80, left: 80},
         width = 720,
         height = 720;
 
@@ -70,9 +70,9 @@ contactMap = function (){
         }
     }
 
-    d3.json("cmap.json", function(miserables) {
+    d3.json("cmap.json", function(data) {
         var matrix = [],
-            nodes = miserables.nodes,
+            nodes = data.nodes.reverse(),
             n = nodes.length;
 
         // Compute index per node.
@@ -82,15 +82,15 @@ contactMap = function (){
             matrix[i] = d3.range(n).map(function(j) { return {x: j, y: i, z: 0}; });
         });
 
-        miserables.links.forEach(function(link) {
-            matrix[link.source][link.target].z += link.value;
-            matrix[link.target][link.source].z += link.value;
-            matrix[link.source][link.source].z += link.value;
-            matrix[link.target][link.target].z += link.value;
-            matrix[link.target][link.source].t = link.sse;
-            matrix[link.source][link.target].t = link.sse;
-            matrix[link.target][link.source].h = link.hbond;
-            matrix[link.source][link.target].h = link.hbond;
+        data.links.forEach(function(link) {
+            matrix[n - link.source - 1][link.target].z += link.value;
+            matrix[n - link.target - 1][link.source].z += link.value;
+            matrix[n - link.source - 1][link.source].z += link.value;
+            matrix[n - link.target - 1][link.target].z += link.value;
+            matrix[n - link.target - 1][link.source].t = link.sse;
+            matrix[n - link.source - 1][link.target].t = link.sse;
+            matrix[n - link.target - 1][link.source].h = link.hbond;
+            matrix[n - link.source - 1][link.target].h = link.hbond;
             nodes[link.source].count += link.value;
             nodes[link.target].count += link.value;
         });
@@ -126,7 +126,7 @@ contactMap = function (){
                 .data(matrix)
                 .enter().append("g")
                 .attr("class", "column")
-                .attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+                .attr("transform", function(d, i) { return "translate(" + x(i) + ", " + (height + 30) + ")rotate(-90)"; });
 
         // column.append("line")
         //     .attr("x1", -width);
@@ -136,7 +136,7 @@ contactMap = function (){
             .attr("y", x.rangeBand() / 2)
             .attr("dy", ".32em")
             .attr("text-anchor", "start")
-            .text(function(d, i) { return nodes[i].name; });
+            .text(function(d, i) { return nodes[n - i - 1].name; });
 
         function format_cell(cell) {
             cell.attr("class", "cell")
