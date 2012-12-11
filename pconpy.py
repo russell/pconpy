@@ -508,7 +508,7 @@ class Matrix(object):
 
         """
 
-        self.__matrix = matrix(data)
+        self.__matrix = matrix(data, dtype="float64")
 
     def __len__(self):
         return len(self.__matrix)
@@ -712,7 +712,7 @@ class ContactMatrix(Matrix):
 
                 if dist < self.threshold and dist >= self.min_threshold and \
                 abs(x - y) >= self.seq_separation:
-                    self.set(x, y, 1)
+                    self.set(x, y, dist)
 
         return
 

@@ -9,7 +9,7 @@ contactMap = function (){
                   "S": "Bend", "C": "Coil"};
 
     var x = d3.scale.ordinal().rangeBands([0, width]),
-        z = d3.scale.linear().domain([0, 4]).clamp(true),
+        z = d3.scale.linear().domain([0, 14]).range([0, 1]).clamp(true),
         c = d3.scale.category10().domain(Object.keys(legend));
 
     var svg = d3.select("body").append("svg")
@@ -123,8 +123,8 @@ contactMap = function (){
         function mouseover(p) {
             d3.selectAll(".row text").classed("active", function(d, i) { return i == p.y; });
             d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; });
-            d3.selectAll(".row").classed("active", function(d, i) { return i == p.y; });
-            d3.selectAll(".column").classed("active", function(d, i) { return i == p.x; });
+            // d3.selectAll(".row").classed("active", function(d, i) { return i == p.y; });
+            // d3.selectAll(".column").classed("active", function(d, i) { return i == p.x; });
         }
 
         function mouseout() {
