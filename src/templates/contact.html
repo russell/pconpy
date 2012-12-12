@@ -39,6 +39,7 @@
         <legend>Find Structure</legend>
         <label>Structure ID</label>
         <input id="structureid" type="text" value="1UBQ"/>
+        <input id="threshold" type="text" value="8.0"/>
         <button type="submit" class="btn">Submit</button>
       </fieldset>
     </form>
@@ -48,10 +49,11 @@
     <script src="/static/js/jquery-1.8.3.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
-         contactMap($("#structureid").attr("value"));
+         contactMap($("#structureid").attr("value"), $("#threshold").attr("value"));
+
          $("#structure").submit(function(event) {
              event.preventDefault();
-             contactMap($("#structureid").attr("value"));
+             contactMap($("#structureid").attr("value"), $("#threshold").attr("value"));
              });
       });
     </script>

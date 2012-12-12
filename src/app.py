@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import render_template
+from flask import request
 app = Flask(__name__)
 from StringIO import StringIO
 from pconpy import ContactMatrix, Protein
@@ -25,10 +26,17 @@ def structure(structureid):
     protein = Protein(f.name)
     chains = []
     pp = protein.get_polypeptide(chains)
-    cmatrix = ContactMatrix(pp, metric="CA",
-                            threshold=8.0,
-                            min_threshold=0.0,
-                            seq_separation=0)
+
+    metric = request.args.get('metric', "CA")
+    threshold = float(request.args.get('threshold', 8.0))
+    min_threshold = float(request.args.get('min_threshold', 0.0))
+    seq_separation = int(request.args.get('seq_separation', 0))
+
+    cmatrix = ContactMatrix(pp,
+                            metric="CA",
+                            threshold=threshold,
+                            min_threshold=min_threshold,
+                            seq_separation=seq_separation)
 
     fh = StringIO()
     cmatrix.print_contact_json(fh, sse="DSSP", hbonds=True)
