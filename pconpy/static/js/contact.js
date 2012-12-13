@@ -20,7 +20,8 @@ toggleColor = function(selector, color) {
             $(this).data("disabled", true);
             fill = "black";
         }
-        d3.selectAll(selector).transition().duration(600).delay(0).style("fill", fill);
+        $(this).toggleClass("active");
+        d3.selectAll(selector).transition().duration(500).delay(0).style("fill", fill);
     };
 };
 
@@ -37,65 +38,81 @@ contactMap = function (){
     var x = d3.scale.ordinal().rangeBands([0, width]),
         c = d3.scale.category10().domain(Object.keys(legend));
 
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select("#graph").append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
-            .style("margin-left", -margin.left + "px")
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var legendSvg = d3.select("body").append("svg")
-            .attr("width", 200)
-            .attr("height", 500);
-
-    var y = 2;
-    
-    legendSvg.append("svg:circle")
-        .attr("fill", "none")
-        .attr("stroke", "black")
-        .attr("stroke-width", "1")
-        .attr("cx", 12)
-        .attr("cy", y + 10)
-        .attr("r", 10);
-
-    legendSvg.append("svg:text")
-        .attr("x", 30)
-        .attr("y", y + 15)
-        .text("Hydrogen Bond");
-    y += 22;
-
-    legendSvg.append("svg:rect")
-        .attr("fill", "none")
-        .attr("stroke", "black")
-        .attr("stroke-width", "0")
-        .attr("x", 2)
-        .attr("y", y + 0)
-        .attr("width", 20)
-        .attr("height", 20);
-
-    legendSvg.append("svg:text")
-        .attr("x", 30)
-        .attr("y", y + 15)
-        .text("Hydrophobic");
-    y += 25;
-
+    var sidebar = d3.select("#legend");
     for (var key in legend) {
-        if (legend.hasOwnProperty(key)) {
-            legendSvg.append("svg:rect")
-                .attr("fill", c(key))
-                .attr("x", 2)
-                .attr("y", y + 0)
-                .attr("width", 20)
-                .attr("height", 20)
-                .on("click", toggleColor(".structure-" + key, c(key)));
-
-            legendSvg.append("svg:text")
-                .attr("x", 30)
-                .attr("y", y + 15)
-                .text(legend[key]);
-            y += 22;
-        }
+        btn = sidebar.append("button")
+            .attr("class", "btn btn-block active")
+            .attr("type", "button")
+            .attr("value", key)
+            .text(legend[key])
+            .on("click", toggleColor(".structure-" + key, c(key)))
+            .append("svg")
+            .attr("width", 14)
+            .attr("height", 14)
+            .append("svg:rect")
+            .attr("fill", c(key))
+            .attr("width", 14)
+            .attr("height", 14);
     }
+
+    // var legendSvg = d3.select("#sidebar").append("svg")
+    //         .attr("width", 200)
+    //         .attr("height", 500);
+
+    // var y = 2;
+    
+    // legendSvg.append("svg:circle")
+    //     .attr("fill", "none")
+    //     .attr("stroke", "black")
+    //     .attr("stroke-width", "1")
+    //     .attr("cx", 12)
+    //     .attr("cy", y + 10)
+    //     .attr("r", 10);
+
+    // legendSvg.append("svg:text")
+    //     .attr("x", 30)
+    //     .attr("y", y + 15)
+    //     .text("Hydrogen Bond");
+    // y += 22;
+
+    // legendSvg.append("svg:rect")
+    //     .attr("fill", "none")
+    //     .attr("stroke", "black")
+    //     .attr("stroke-width", "0")
+    //     .attr("x", 2)
+    //     .attr("y", y + 0)
+    //     .attr("width", 20)
+    //     .attr("height", 20);
+
+    // legendSvg.append("svg:text")
+    //     .attr("x", 30)
+    //     .attr("y", y + 15)
+    //     .text("Hydrophobic");
+    // y += 25;
+
+    // for (var key in legend) {
+    //     if (legend.hasOwnProperty(key)) {
+    //         legendSvg.append("svg:rect")
+    //             .attr("fill", c(key))
+    //             .attr("x", 2)
+    //             .attr("y", y + 0)
+    //             .attr("width", 20)
+    //             .attr("height", 20)
+    //             .on("click", toggleColor(".structure-" + key, c(key)));
+
+    //         legendSvg.append("svg:text")
+    //             .attr("x", 30)
+    //             .attr("y", y + 15)
+    //             .text(legend[key]);
+    //         y += 22;
+    //     }
+    // }
 
     svg.append("rect")
         .attr("class", "background")
