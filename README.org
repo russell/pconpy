@@ -3,3 +3,29 @@
 
 :   pip install -r requirements
 :   pip install https://sourcesup.renater.fr/frs/download.php/2309/ScientificPython-2.8.tar.gz
+
+* TODO
+
+** Residue names scrunch up along the sides if the sequence is too long.
+   Perhaps we need one letter code or select every nth residue to
+   show.  - or even just some numbers might make it more readable.
+
+** Toggle to change colours,
+   might be nice to highlight the hydrogen bonds or turn off the other
+   contacts.
+
+   perhaps toggle all colours
+
+   highlight selected type from legend on the graph
+
+** Colouring the rows in terms of hydrophobicity.
+   say ILE LEU VAL - a light orange.  A lot of sheets form with
+   alternating residues of polar and non-polar.  This might help to
+   spot those features.
+
+** Contact map output from pconpy should be only the required data
+
+   currently the contact map output is the complete data from the
+   map, it would be better if the data was only half the map so it
+   can be transposed to create the other half..  also this will allow
+   comparisons with other datasets.
