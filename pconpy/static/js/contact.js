@@ -45,6 +45,39 @@ contactMap = function (){
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var sidebar = d3.select("#legend");
+    btn = sidebar.append("button")
+        .attr("class", "btn btn-block disabled")
+        .attr("type", "button")
+        .text("No Bond")
+        .append("svg")
+        .attr("width", 14)
+        .attr("height", 14)
+        .append("svg:rect")
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", "1")
+        .attr("x", 1)
+        .attr("y", 1)
+        .attr("width", 12)
+        .attr("height", 12);
+
+    btn = sidebar.append("button")
+        .attr("class", "btn btn-block disabled")
+        .attr("type", "button")
+        .text("Hydrogen Bond")
+        .append("svg")
+        .attr("width", 14)
+        .attr("height", 14)
+        .append("svg:circle")
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", "1")
+        .attr("cx", 7)
+        .attr("cy", 7)
+        .attr("r", 6);
+
+    sidebar.append("hr");
+
     for (var key in legend) {
         btn = sidebar.append("button")
             .attr("class", "btn btn-block active")
@@ -60,59 +93,6 @@ contactMap = function (){
             .attr("width", 14)
             .attr("height", 14);
     }
-
-    // var legendSvg = d3.select("#sidebar").append("svg")
-    //         .attr("width", 200)
-    //         .attr("height", 500);
-
-    // var y = 2;
-    
-    // legendSvg.append("svg:circle")
-    //     .attr("fill", "none")
-    //     .attr("stroke", "black")
-    //     .attr("stroke-width", "1")
-    //     .attr("cx", 12)
-    //     .attr("cy", y + 10)
-    //     .attr("r", 10);
-
-    // legendSvg.append("svg:text")
-    //     .attr("x", 30)
-    //     .attr("y", y + 15)
-    //     .text("Hydrogen Bond");
-    // y += 22;
-
-    // legendSvg.append("svg:rect")
-    //     .attr("fill", "none")
-    //     .attr("stroke", "black")
-    //     .attr("stroke-width", "0")
-    //     .attr("x", 2)
-    //     .attr("y", y + 0)
-    //     .attr("width", 20)
-    //     .attr("height", 20);
-
-    // legendSvg.append("svg:text")
-    //     .attr("x", 30)
-    //     .attr("y", y + 15)
-    //     .text("Hydrophobic");
-    // y += 25;
-
-    // for (var key in legend) {
-    //     if (legend.hasOwnProperty(key)) {
-    //         legendSvg.append("svg:rect")
-    //             .attr("fill", c(key))
-    //             .attr("x", 2)
-    //             .attr("y", y + 0)
-    //             .attr("width", 20)
-    //             .attr("height", 20)
-    //             .on("click", toggleColor(".structure-" + key, c(key)));
-
-    //         legendSvg.append("svg:text")
-    //             .attr("x", 30)
-    //             .attr("y", y + 15)
-    //             .text(legend[key]);
-    //         y += 22;
-    //     }
-    // }
 
     svg.append("rect")
         .attr("class", "background")
@@ -165,7 +145,7 @@ contactMap = function (){
                                 .attr("text-anchor", "end")
                                 .text(function(d) { return nodes[i].name; });
 
-                            bondless = d3.select(this).selectAll(".cell")
+                            bondless = d3.select(this).selectAll(".residue")
                                 .data(d.filter(function(d) { return ! d.h && d.z; }));
 
                             bondless.enter().append("rect")
