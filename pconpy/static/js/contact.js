@@ -1,3 +1,29 @@
+
+// IE support for indexof
+if (!Array.prototype.indexOf) {
+   Array.prototype.indexOf = function(item) {
+      var i = this.length;
+      while (i--) {
+         if (this[i] === item) return i;
+      }
+      return -1;
+   };
+}
+
+
+toggleColor = function(selector, color) {
+    return function() {
+        if ($(this).data("disabled") == true){
+            $(this).data("disabled", false);
+            fill = color;
+        } else {
+            $(this).data("disabled", true);
+            fill = "black";
+        }
+        d3.selectAll(selector).transition().duration(600).delay(0).style("fill", fill);
+    };
+};
+
 contactMap = function (){
     var margin = {top: 10, right: 0, bottom: 80, left: 80},
         width = 720,
@@ -23,25 +49,11 @@ contactMap = function (){
             .attr("height", 500);
 
     var y = 2;
-    legendSvg.append("svg:rect")
-        .attr("fill", "none" )
-        .attr("stroke", "black" )
-        .attr("stroke-width", "1" )
-        .attr("x", 2)
-        .attr("y", y + 0)
-        .attr("width", 20)
-        .attr("height", 20);
-
-    legendSvg.append("svg:text")
-        .attr("x", 30)
-        .attr("y", y + 15)
-        .text("No Bond");
-    y += 22;
-
+    
     legendSvg.append("svg:circle")
-        .attr("fill", "none" )
-        .attr("stroke", "black" )
-        .attr("stroke-width", "1" )
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", "1")
         .attr("cx", 12)
         .attr("cy", y + 10)
         .attr("r", 10);
@@ -50,16 +62,32 @@ contactMap = function (){
         .attr("x", 30)
         .attr("y", y + 15)
         .text("Hydrogen Bond");
+    y += 22;
+
+    legendSvg.append("svg:rect")
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", "0")
+        .attr("x", 2)
+        .attr("y", y + 0)
+        .attr("width", 20)
+        .attr("height", 20);
+
+    legendSvg.append("svg:text")
+        .attr("x", 30)
+        .attr("y", y + 15)
+        .text("Hydrophobic");
     y += 25;
 
     for (var key in legend) {
         if (legend.hasOwnProperty(key)) {
             legendSvg.append("svg:rect")
-                .attr("fill", c(key) )
+                .attr("fill", c(key))
                 .attr("x", 2)
                 .attr("y", y + 0)
                 .attr("width", 20)
-                .attr("height", 20);
+                .attr("height", 20)
+                .on("click", toggleColor(".structure-" + key, c(key)));
 
             legendSvg.append("svg:text")
                 .attr("x", 30)
@@ -108,8 +136,10 @@ contactMap = function (){
                             .data(matrix);
 
                     row.enter().append("g")
-                        .attr("class", "row")
+                        .attr("class", function(d, i) { return "row residue-" + nodes[i].name; })
                         .attr("transform", function(d, i) { return "translate(0," + x(i) + ")"; })
+                        .on("mouseover", mouseover)
+                        .on("mouseout", mouseout)
                         .each(function (d, i) {
                             d3.select(this).append("text")
                                 .attr("x", -6)
@@ -124,11 +154,12 @@ contactMap = function (){
                             bondless.enter().append("rect")
                                 .attr("x", function(d) { return x(d.x); })
                                 .attr("width", x.rangeBand())
-                                .attr("height", x.rangeBand()).attr("class", "cell")
+                                .attr("height", x.rangeBand())
+                                .attr("class", function(d, i) { return "residue structure-" + d.t; })
                                 .style("fill-opacity", function(d) { return z(d.z); })
                                 .style("fill", function(d) { return d.t ? c(d.t) : null; })
-                                .on("mouseover", mouseover)
-                                .on("mouseout", mouseout);
+                                .on("mouseover", mouseover_contact)
+                                .on("mouseout", mouseout_contact);
 
                             bond = d3.select(this).selectAll(".hbond")
                                 .data(d.filter(function(d) { return d.h && d.z; }));
@@ -136,13 +167,13 @@ contactMap = function (){
                             bond.enter().append("circle")
                                 .attr("cx", function(d) { return x(d.x) + x.rangeBand()/2; })
                                 .attr("cy", function(d) { return x.rangeBand()/2; })
-                                .attr("r", x.rangeBand()/2).attr("class", "hbond")
+                                .attr("r", x.rangeBand()/2)
+                                .attr("class", function(d, i) { return "hbond structure-" + d.t; })
                                 .style("fill-opacity", function(d) { return z(d.z); })
                                 .style("fill", function(d) { return d.t ? c(d.t) : null; })
-                                .on("mouseover", mouseover)
-                                .on("mouseout", mouseout);
+                                .on("mouseover", mouseover_contact)
+                                .on("mouseout", mouseout_contact);
                         });
-
                     // row.append("line")
                     //     .attr("x2", width);
 
@@ -159,6 +190,8 @@ contactMap = function (){
                               function(d, i) { 
                                   return "translate(" + x(i) + ", " + (height + 30) + ")rotate(-90)"; 
                               })
+                        .on("mouseover", mouseover)
+                        .on("mouseout", mouseout)
                         .each(function (d, i) {
                             d3.select(this).append("text")
                                 .attr("x", 6)
@@ -174,12 +207,19 @@ contactMap = function (){
                     column.exit().remove();
 
                     function mouseover(p) {
+                        console.log(this);
                         d3.selectAll(".row text").classed("active", function(d, i) { return i == p.y; });
                         d3.selectAll(".column text").classed("active", function(d, i) { return i == p.x; });
                     }
 
                     function mouseout() {
                         d3.selectAll("text").classed("active", false);
+                    }
+
+                    function mouseover_contact(p) {
+                    }
+
+                    function mouseout_contact() {
                     }
 
                 });}; 
